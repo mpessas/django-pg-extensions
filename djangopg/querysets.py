@@ -33,6 +33,7 @@ class FtsQuerySet(models.query.QuerySet):
         where = []
         select = {}
         order_by = []
+        params = []
         for search_field, query in kwargs.items():
             relation = None
             LOOKUP_SEP = models.sql.constants.LOOKUP_SEP
@@ -57,9 +58,8 @@ class FtsQuerySet(models.query.QuerySet):
                 )
                 self.query.join(connection)
 
-            ts_query = "%s('%s', '%s')" % (
-                func_name, config, force_unicode(query).replace("'","''")
-            )
+            ts_query = "{0}('{1}', %s)".format(func_name, config)
+            params.append(query)
             qn = connections[self.db].ops.quote_name
             field = '{table}.{column}'.format(
                 table=qn(db_table), column=qn(search_field))
@@ -82,4 +82,8 @@ class FtsQuerySet(models.query.QuerySet):
                 order_by.append(
                     '{sign}{field}'.format(sign=sign, field=order)
                 )
-        return self.extra(select=select, where=where, order_by=order_by)
+
+        return self.extra(
+            select=select, where=where, order_by=order_by,
+            select_params=params, params=params
+        )
