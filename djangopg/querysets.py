@@ -28,18 +28,19 @@ class FtsQuerySet(models.query.QuerySet):
         """
         return self._search("plainto_tsquery", **kwargs)
 
-    def _search(self, func_name, order_by_field=None, **kwargs):
+    def _search(self, func_name, include_rank=False, **kwargs):
         """Do a full-text search."""
         where = []
         select = {}
-        order_by = []
         params = []
-        for search_field, query in kwargs.items():
-            relation = None
+        for full_search_field, query in kwargs.items():
             LOOKUP_SEP = models.sql.constants.LOOKUP_SEP
-            if LOOKUP_SEP in search_field:
+            if LOOKUP_SEP in full_search_field:
                 # Assume one level for now
-                relation, search_field = search_field.split(LOOKUP_SEP)
+                relation, search_field = full_search_field.split(LOOKUP_SEP)
+            else:
+                relation = None
+                search_field = full_search_field
 
             config_var = search_field + '_config'
             default_config = 'pg_catalog.simple'
@@ -65,25 +66,10 @@ class FtsQuerySet(models.query.QuerySet):
                 table=qn(db_table), column=qn(search_field))
             where.append(u" ({0}) @@ ({1})".format(field, ts_query))
 
-            if order_by_field is not None:
-                if relation is None:
-                    order_key = search_field
-                else:
-                    order_key = relation + LOOKUP_SEP + search_field
-                order = order_by_field.get(order_key)
-                if order is None:
-                    continue
-                if order.startswith('-'):
-                    order = order[1:]
-                    sign = '-'
-                else:
-                    sign = ''
-                select[order] = u'ts_rank({0}, {1})'.format(field, ts_query)
-                order_by.append(
-                    '{sign}{field}'.format(sign=sign, field=order)
-                )
+            if include_rank:
+                select_clause = u'ts_rank({0}, {1})'.format(field, ts_query)
+                select[full_search_field + '_fts_rank'] = select_clause
 
         return self.extra(
-            select=select, where=where, order_by=order_by,
-            select_params=params, params=params
+            select=select, where=where, select_params=params, params=params
         )
