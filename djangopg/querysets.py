@@ -6,7 +6,15 @@ from django.utils.encoding import force_unicode
 
 class FtsQuerySet(models.query.QuerySet):
 
+    def search_raw(self, **kwargs):
+        """Do a raw full-text search."""
+        return self._search("to_tsquery", **kwargs)
+
     def search(self, **kwargs):
+        """Do a full-text search."""
+        return self._search("plainto_tsquery", **kwargs)
+
+    def _search(self, func_name, **kwargs):
         """Do a full-text search."""
         where = []
         for search_field, query in kwargs.items():
@@ -33,7 +41,6 @@ class FtsQuerySet(models.query.QuerySet):
                 )
                 self.query.join(connection)
 
-            func_name = 'plainto_tsquery'
             ts_query = "%s('%s', '%s')" % (
                 func_name, config, force_unicode(query).replace("'","''")
             )
