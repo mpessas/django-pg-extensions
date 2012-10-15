@@ -20,6 +20,7 @@ class SearchQ(Q):
 
     def __init__(self, *args, **kwargs):
         self.config=kwargs.pop('config', 'pg_catalog.simple')
+        self.include_order = kwargs.pop('include_order', False)
         super(SearchQ, self).__init__(*args, **kwargs)
 
     def add_to_query(self, query, used_aliases):
@@ -46,3 +47,9 @@ class SearchQ(Q):
         query.where.add(
             RelabeledWhereNode(table_name, raw_sql, [value]), AND
         )
+
+        if self.include_order:
+            quoted_rank_col_name = '"%s"."%s_fts"' % (table_name, target.column)
+            query_sql = "plainto_tsquery('%s', %%s)" % self.config
+            select_clause = u'ts_rank(%s, %s)' %  (quoted_rank_col_name, query_sql)
+            query.extra.update({'fts_rank': (select_clause % '%s', [value])})
