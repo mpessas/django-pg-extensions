@@ -7,6 +7,12 @@ applications.
 Python 2.6 or greater is required.
 
 
+## Features
+
+- Support for the full text search engine of PostgreSQL.
+- Support for the COPY command.
+
+
 ## Running the tests
 
 Just run
