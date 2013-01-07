@@ -9,7 +9,10 @@ class ArrayField(models.Field):
 
     __metaclass__ = models.SubfieldBase
 
-    _allowed_operators = ['exact', 'isnull', ]
+    _allowed_operators = [
+        'exact', 'isnull', 'array_contains',
+        'array_contained', 'array_overlaps',
+    ]
 
     def db_type(self, connection):
         return '%s[]' % self._type
@@ -30,7 +33,17 @@ class ArrayField(models.Field):
     def get_prep_lookup(self, lookup_type, value):
         if lookup_type not in self._allowed_operators:
             raise TypeError('Invalid operator %s' % lookup_type)
-        return super(ArrayField, self).get_prep_lookup(lookup_type, value)
+        return value
+
+    def get_db_prep_lookup(self, lookup_type, value, connection, prepared=False):
+        prep_value = super(ArrayField, self).get_db_prep_lookup(
+            lookup_type, value, connection, prepared
+        )
+        if prep_value is None and lookup_type.startswith('array_'):
+            prep_value = self.get_db_prep_value(
+                value, connection=connection, prepared=prepared
+            )
+            return [prep_value]
 
 
 class TextArrayField(ArrayField):

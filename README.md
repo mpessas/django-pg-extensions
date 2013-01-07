@@ -11,7 +11,9 @@ Python 2.6 or greater is required.
 
 - Support for the full text search engine of PostgreSQL.
 - Support for the COPY command.
-- Support for ARRAYs. Out of the box support for INT and TEXT arrays.
+- Support for ARRAYs. Out of the box support for INT and TEXT arrays. The
+  operators @> (contains), <@ (is contained by) and && (overlaps with) are
+  supported.
 
 
 ## Running the tests
