@@ -33,14 +33,14 @@ class ArrayField(models.Field):
         return super(ArrayField, self).get_prep_lookup(lookup_type, value)
 
 
-class CharArrayField(ArrayField):
+class TextArrayField(ArrayField):
     """Field for arrays of VARCHAR."""
 
-    description = 'VARCHAR array'
-    _type = 'varchar'
+    description = 'Text array'
+    _type = 'text'
 
     def to_python(self, value):
-        value = super(CharArrayField, self).to_python(value)
+        value = super(TextArrayField, self).to_python(value)
         if value is None:
             return None
         return map(smart_unicode, value)

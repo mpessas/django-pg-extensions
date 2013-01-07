@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from djangopg.fields import ArrayField, CharArrayField, IntArrayField
+from djangopg.fields import ArrayField, TextArrayField, IntArrayField
 
 
 class DbTypeTestCase(unittest.TestCase):
@@ -53,7 +53,7 @@ class ConversionToPythonTestCase(unittest.TestCase):
     """Test specific conversion to django types."""
 
     def test_populated_array_of_varchar_returns_list_of_unicode(self):
-        f = CharArrayField()
+        f = TextArrayField()
         res = f.to_python(['a', 'b'])
         self.assertIsInstance(res, list)
         for element in res:
