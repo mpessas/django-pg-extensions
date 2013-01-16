@@ -7,6 +7,7 @@ Tests for the COPY command support.
 from datetime import datetime
 import unittest
 import csv
+from StringIO import StringIO
 from mock import patch
 from djangopg.copy import _convert_to_csv_form, copy_insert
 from tests.data import Poll, Choice
@@ -89,17 +90,17 @@ class ColumnsTestCase(unittest.TestCase):
 class CsvTestCase(unittest.TestCase):
     """Tests for the CSV formatting."""
 
-    def test_csf_generated_number_of_lines(self, pmock):
+    def test_csv_generated_number_of_lines(self, pmock):
         p = Poll(question='Q')
         copy_insert(Poll, [p])
-        fd = pmock.call_args[0][0]
+        fd = StringIO(pmock.call_args[0][0])
         lines = fd.readlines()
         self.assertEqual(len(lines), 1)
 
-    def test_csf_generated_is_valid(self, pmock):
+    def test_csv_generated_is_valid(self, pmock):
         p = Poll(question='Q')
         copy_insert(Poll, [p])
-        fd = pmock.call_args[0][0]
+        fd = StringIO(pmock.call_args[0][0])
         csvf = csv.reader(fd)
         rows = [row for row in csvf]
         self.assertEqual(rows[0][0], 'Q')
@@ -119,3 +120,48 @@ class ForeingKeyFieldTestCase(unittest.TestCase):
         rows = [row for row in csvf]
         data = rows[0]
         self.assertEqual(int(data[0]), 1)
+
+
+@patch('djangopg.copy._send_csv_to_postgres')
+class EmptyStringTestCase(unittest.TestCase):
+    """Test handling of empty strings."""
+
+    def setUp(self):
+        p = Poll(pk=1)
+        self.c = Choice(poll=p)
+
+    def test_empty_string_start(self, pmock):
+        copy_insert(Choice, [self.c], columns=['choice_text', 'poll', 'votes'])
+        csv_file = pmock.call_args[0][0]
+        self.assertEqual('"",1,\n', csv_file)
+
+    def test_empty_string_end(self, pmock):
+        copy_insert(Choice, [self.c], columns=['poll', 'votes', 'choice_text'])
+        csv_file = pmock.call_args[0][0]
+        self.assertEqual('1,,""\n', csv_file)
+
+    def test_empty_string_middle(self, pmock):
+        copy_insert(Choice, [self.c], columns=['poll', 'choice_text', 'votes'])
+        csv_file = pmock.call_args[0][0]
+        self.assertEqual('1,"",\n', csv_file)
+
+    def test_empty_string_start_newline(self, pmock):
+        copy_insert(
+            Choice, [self.c, self.c], columns=['choice_text', 'poll', 'votes']
+        )
+        csv_file = pmock.call_args[0][0]
+        self.assertEqual('"",1,\n"",1,\n', csv_file)
+
+    def test_empty_string_end_newline(self, pmock):
+        copy_insert(
+            Choice, [self.c, self.c], columns=['poll', 'votes', 'choice_text']
+        )
+        csv_file = pmock.call_args[0][0]
+        self.assertEqual('1,,""\n1,,""\n', csv_file)
+
+    def test_no_empty_string(self, pmock):
+        copy_insert(
+            Choice, [self.c, self.c], columns=['poll', 'choice_text', 'votes']
+        )
+        csv_file = pmock.call_args[0][0]
+        self.assertEqual('1,"",\n1,"",\n', csv_file)
