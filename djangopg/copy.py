@@ -84,7 +84,7 @@ def copy_insert(model, entries, columns=None, using='default'):
         for e in entries:
             row = [
                 _convert_to_csv_form(
-                    f.get_db_prep_save(getattr(e, f.column), connection=conn)
+                    f.get_db_prep_save(f.pre_save(e, True), connection=conn)
                 )
                 for f in fields
             ]
