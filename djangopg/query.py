@@ -2,7 +2,7 @@
 
 import types
 from django.db.models import Q
-from django.db.models.sql.constants import LOOKUP_SEP
+from django.db.models.query import LOOKUP_SEP
 from django.core.exceptions import FieldError
 from django.db.models.sql.where import AND
 from djangopg.where import RelabeledWhereNode
