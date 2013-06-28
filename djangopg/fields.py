@@ -64,3 +64,9 @@ class IntArrayField(ArrayField):
 
     description = 'INT array'
     _type = 'int'
+
+
+class CaseInsensitiveCharField(models.CharField):
+
+    def db_type(self, connection):
+        return 'citext'
