@@ -14,6 +14,7 @@ Python 2.6 or greater is required.
 - Support for ARRAYs. Out of the box support for INT and TEXT arrays. The
   operators @> (contains), <@ (is contained by) and && (overlaps with) are
   supported.
+- Case-insensitive variants of `CharField` and `SlugField`.
 
 
 ## Running the tests

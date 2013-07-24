@@ -66,7 +66,16 @@ class IntArrayField(ArrayField):
     _type = 'int'
 
 
-class CaseInsensitiveCharField(models.CharField):
+class CaseInsensitiveMixin(object):
+    """Add a case-insensitive variant of text fields."""
 
     def db_type(self, connection):
         return 'citext'
+
+
+class CaseInsensitiveCharField(CaseInsensitiveMixin, models.CharField):
+    """Case-insensitive CharField."""
+
+
+class CaseInsensitiveSlugField(CaseInsensitiveMixin, models.SlugField):
+    """Case-insensitive SlugField."""
