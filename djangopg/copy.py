@@ -55,7 +55,7 @@ def _send_csv_to_postgres(csv_text, conn, table_name, columns):
         fd.close()
 
 
-def copy_insert(model, entries, columns=None, using='default'):
+def copy_insert(model, entries, columns=None, using='default', **kwargs):
     """
     Add the given entries to the database using the COPY command.
 
@@ -67,7 +67,7 @@ def copy_insert(model, entries, columns=None, using='default'):
         By default, we use all columns but the primary key.
     :param using: The database connection to use.
     """
-    table_name = model._meta.db_table
+    table_name = kwargs.get('table_name', model._meta.db_table)
     conn = connections[using]
 
     if columns is None:
@@ -87,6 +87,22 @@ def copy_insert(model, entries, columns=None, using='default'):
                     f.get_db_prep_save(f.pre_save(e, True), connection=conn)
                 )
                 for f in fields
+            ]
+            csvf.writerow(row)
+        content = _fix_empty_string_marks(fd.getvalue())
+    db_columns = [f.column for f in fields]
+    _send_csv_to_postgres(content, conn, table_name, db_columns)
+
+
+def copy_insert_raw(table_name, entries, columns, using='default'):
+    conn = connections[using]
+
+    # Construct a StringIO from the entries
+    with closing(StringIO()) as fd:
+        csvf = csv.writer(fd, lineterminator='\n')
+        for e in entries:
+            row = [
+                _convert_to_csv_form(cell) for cell in e
             ]
             csvf.writerow(row)
         content = _fix_empty_string_marks(fd.getvalue())
