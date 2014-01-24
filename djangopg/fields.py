@@ -72,10 +72,21 @@ class CaseInsensitiveMixin(object):
     def db_type(self, connection):
         return 'citext'
 
+    def to_python(self, value):
+        if isinstance(value, unicode) or value is None:
+            return value
+        if isinstance(value, str):
+            return value.decode('UTF-8')
+        return smart_unicode(value)
+
 
 class CaseInsensitiveCharField(CaseInsensitiveMixin, models.CharField):
     """Case-insensitive CharField."""
 
+    __metaclass__ = models.SubfieldBase
+
 
 class CaseInsensitiveSlugField(CaseInsensitiveMixin, models.SlugField):
     """Case-insensitive SlugField."""
+
+    __metaclass__ = models.SubfieldBase
