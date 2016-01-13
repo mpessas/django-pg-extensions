@@ -8,7 +8,7 @@ from django.db.backends.postgresql_psycopg2.operations import (
 
 class DatabaseOperations(BaseOperations):
 
-    def lookup_cast(self, lookup_type):
+    def lookup_cast(self, lookup_type, internal_type=None):
         lookup = '%s'
         # Use UPPER(x) for case-insensitive lookups; it's faster.
         if lookup_type in ('iexact', 'icontains', 'istartswith', 'iendswith'):
