@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="django-pg-extensions",
-    version="0.1.6",
+    version="0.1.7",
     description="Extensions for Django to fully utilize PostgreSQL.",
     author="Apostolos Bessas",
     author_email="mpessas@gmail.com",
